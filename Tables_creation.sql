@@ -315,3 +315,18 @@ SELECT
 			HAVING COUNT(private_seller.id_user) > 2;
 			
 SELECT * FROM show_users_more_than_two_ads LIMIT 5;
+
+--8.Создать пользовательскую функцию.
+
+-- функция, показывающая название и цвет грузвого автомобиля, по его ID:
+CREATE FUNCTION name_and_color_by_id (id_vehicles INTEGER, OUT color VARCHAR, OUT power VARCHAR) AS
+$$
+	SELECT 
+		car_brand,
+		car_color
+	FROM freight_vehicles
+	WHERE id = id_vehicles;
+$$
+LANGUAGE SQL;
+
+SELECT name_and_color_by_id(9);
