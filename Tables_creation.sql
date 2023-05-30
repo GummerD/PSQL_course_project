@@ -280,3 +280,38 @@ SELECT
 	JOIN light_vehicles
 	ON garage.id_light_vehicles = light_vehicles.id
 	WHERE last_name = 'Lindsay';
+
+-- 7.Создать два представления, в основе которых лежат сложные запросы.
+
+-- создаю представление, которое показывает пользователей без мотоциклов:
+CREATE VIEW  users_without_motorcycles AS
+SELECT DISTINCT
+	users.id,
+ 	profiles.first_name,
+	profiles.last_name
+	FROM users
+		JOIN profiles
+			ON users.id = profiles.id_user
+		JOIN garage
+			ON users.id = garage.id_user 
+			WHERE garage.id_motorcycles IS NULL;
+			
+SELECT * FROM users_without_motorcycles LIMIT 5;
+
+-- создаю представление, показывающее пользователей с 2 и более объявлениями: 
+CREATE VIEW show_users_more_than_two_ads AS
+SELECT
+	users.id,
+ 	profiles.first_name,
+	profiles.last_name
+	FROM users
+		JOIN profiles
+			ON users.id = profiles.id_user
+		JOIN private_seller
+			ON users.id = private_seller.id_user 
+			GROUP BY users.id,
+			profiles.first_name,
+			profiles.last_name
+			HAVING COUNT(private_seller.id_user) > 2;
+			
+SELECT * FROM show_users_more_than_two_ads LIMIT 5;
