@@ -14,7 +14,6 @@
 */
 
 -- 1.ТАБЛИЦА ПОЛЬЗОВАТЕЛЕЙ, необходима для аутентификации пользователей:
-
 DROP TABLE IF EXISTS "users";
 CREATE TABLE "users" (
   id SERIAL PRIMARY KEY,
@@ -24,7 +23,6 @@ CREATE TABLE "users" (
 );
 
 -- 2.ТАБЛИЦА ПРОФИЛЕЙ, в которой хранится подробная информация о пользователях:
-
 DROP TABLE IF EXISTS profiles;
 CREATE TABLE profiles(
 	id_user INT,
