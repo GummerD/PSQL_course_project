@@ -316,6 +316,7 @@ SELECT
 			
 SELECT * FROM show_users_more_than_two_ads LIMIT 5;
 
+
 --8.Создать пользовательскую функцию.
 
 -- функция, показывающая название и цвет грузвого автомобиля, по его ID:
@@ -330,3 +331,40 @@ $$
 LANGUAGE SQL;
 
 SELECT name_and_color_by_id(9);
+
+
+--9. Создать триггер.
+
+-- триггер для модерации слов в сообщениях:
+
+CREATE TABLE banned_words (
+	word VARCHAR (255)
+);
+
+INSERT INTO banned_words VALUES ('test');
+
+CREATE OR REPLACE FUNCTION update_message_body_trigger()
+RETURNS TRIGGER AS
+$$
+ DECLARE is_found BOOLEAN;
+  BEGIN
+   is_found := EXISTS(SELECT * FROM banned_words WHERE NEW.text LIKE '%' || word || '%' );
+  IF is_found THEN
+   NEW.text := '_MODERATED_';
+  END IF;
+RETURN NEW;
+END
+$$
+LANGUAGE PLPGSQL;
+
+CREATE TRIGGER check_message_on_update BEFORE INSERT ON messages_for_seller
+FOR EACH ROW
+EXECUTE FUNCTION update_message_body_trigger();
+
+DROP TRIGGER check_message_on_update ON messages_for_seller;
+
+
+INSERT INTO messages_for_seller (from_user_id,to_private_seller,text,created_at)
+VALUES (30,87,'a letter to the seller test','04.01.23');
+
+SELECT * FROM messages_for_seller WHERE text = '_MODERATED_';
