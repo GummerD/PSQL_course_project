@@ -368,3 +368,73 @@ INSERT INTO messages_for_seller (from_user_id,to_private_seller,text,created_at)
 VALUES (30,87,'a letter to the seller test','04.01.23');
 
 SELECT * FROM messages_for_seller WHERE text = '_MODERATED_';
+
+/*
+10.Для одного из запросов, созданных в пункте 6, провести оптимизацию. В качестве отчета
+приложить планы выполнения запроса, ваш анализ и показать действия, которые улучшили
+эффективность запроса.
+*/
+
+/*
+Первоначальный запрос для оптимизации:
+
+EXPLAIN SELECT
+ profiles.id_user,
+ profiles.last_name,
+ profiles.first_name,
+ garage.id_light_vehicles,
+ light_vehicles.car_brand
+  FROM profiles
+  	JOIN garage
+	ON garage.id_user = profiles.id_user
+	JOIN light_vehicles
+	ON garage.id_light_vehicles = light_vehicles.id
+	WHERE last_name = 'Lindsay';
+
+Проверка на быстродействие показала следующее:
+Nested loop (cost=3.41.. 6.97 rows=1 width=28)
+->  Hash Join  (cost=3.26..6.65 rows=1 width=21)
+->  Hash Cond: (garage.id_user = profiles.id_user)
+->  Seq Scan on garage  (cost=0.00..3.00 rows=100 width=8)
+->  Hash  (cost=3.25..3.25 rows=1 width=17)
+->  Seq Scan on profiles  (cost=0.00..3.25 rows=1 width=17)
+->  Filter: ((last_name)::text = 'Lindsay'::text)
+->  Index Scan using light_vehicles_pkey on light_vehicles  (cost=0.14..0.32 rows=1 width=11)
+->  Index Cond: (id = garage.id_light_vehicles)
+*/
+
+EXPLAIN SELECT
+ profiles.id_user,
+ profiles.last_name,
+ profiles.first_name,
+ garage.id_light_vehicles,
+ light_vehicles.car_brand
+  FROM profiles
+  	JOIN garage
+	ON garage.id_user = profiles.id_user
+	JOIN light_vehicles
+	ON garage.id_light_vehicles = light_vehicles.id
+	WHERE last_name = 'Lindsay' AND first_name = 'Lee';
+
+ANALYZE VERBOSE profiles (last_name);
+
+-- в качестве оптимизации было принято решение провести индексацию имени и фамилии, внешнего ключа.
+
+-- запрос на уточнение назначенных индексов в таблице profiles:
+SELECT indexname FROM pg_indexes WHERE tablename = 'profiles';
+
+-- проведение оптимзации и назначение составного индекса на фамилию и имя:
+CREATE INDEX users_last_and_first_name_idx ON profiles (last_name, first_name);
+
+-- проведение оптимзации и назначение индекса на внешний ключ:
+CREATE INDEX id_light_vehicles_fk_idx ON garage (id_light_vehicles);
+
+-- при необходимости удалить назначенные индексы:
+DROP INDEX users_last_and_first_name_idx;
+DROP INDEX id_light_vehicles_fk_idx;
+
+/*
+После назначения индексов ситуация не поменялась, но это связанно с небольшим количеством данных в БД.
+При увеличении строк в таблицах СУБД вместо последовательного поиска данных перейдет на сканирование индексов, что
+увеличит быстродейтсвие.
+*/
