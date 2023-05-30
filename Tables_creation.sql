@@ -196,7 +196,6 @@ SELECT
    ORDER BY ownership_status;
 
 -- запрос показывающий какие транспортные срадства есть у пользователя с фамлией Gordon:
-
 SELECT 
  id_user,
  (SELECT car_brand FROM light_vehicles WHERE light_vehicles.id = garage.id_light_vehicles) AS name_light_vehicles, 
@@ -206,3 +205,78 @@ SELECT
   FROM garage
   	WHERE id_user = (SELECT id_user FROM profiles WHERE last_name = 'Gordon');
 
+
+
+-- 6. Создать два сложных запроса с использованием объединения JOIN и без использования подзапросов.
+
+-- Получить номера объявлений, по которому была произведена отправка сообщений пользователей:
+SELECT
+	private_seller.id AS "Номер обявления",
+	messages_for_seller.from_user_id AS "ID отправителя",
+	messages_for_seller.to_private_seller AS "ID получателя",
+	messages_for_seller.text AS "Текст сообщения"
+	FROM private_seller
+		JOIN messages_for_seller
+		ON private_seller.id = messages_for_seller.id;
+
+-- Модифицирую запрос, на  отрправителя:		
+SELECT
+	private_seller.id AS "Номер обявления",
+	messages_for_seller.from_user_id AS "ID отправителя",
+	profiles.first_name AS "Имя отправителя",
+	profiles.last_name AS "Фамиля отправителя",
+	messages_for_seller.to_private_seller AS "ID получателя",
+	messages_for_seller.text AS "Текст сообщения"
+	FROM private_seller
+		JOIN messages_for_seller
+		 ON private_seller.id = messages_for_seller.id
+		JOIN profiles
+		 ON profiles.id_user = messages_for_seller.from_user_id;
+
+-- Модифицирую запрос, меняю имя и фамилию на получателя:	
+SELECT
+	private_seller.id AS "Номер обявления",
+	messages_for_seller.to_private_seller AS "ID отправителя",
+	profiles.first_name AS "Имя отправителя",
+	profiles.last_name AS "Фамиля отправителя",
+	messages_for_seller.text AS "Текст сообщения"
+	FROM private_seller
+		JOIN messages_for_seller
+		 ON private_seller.id = messages_for_seller.id
+		JOIN profiles
+		 ON profiles.id_user = messages_for_seller.to_private_seller;
+		 
+
+
+-- Второй запрос, для получения полной инфорамции о пользователях:
+SELECT
+ users.id AS "ID пользователя",
+ users.login AS "Логин пользователя",
+ users.password AS "Пароль пользователя",
+ users.created_at AS "Дата создания учетной записи",
+ profiles.first_name AS "Имя пользователя",
+ profiles.last_name AS "Фамилия пользователя",
+ profiles.email AS "Эл. почта пользователя",
+ profiles.phone AS "Телефон пользователя",
+ profiles.driving_experience AS "Стаж вождения пользователя",
+ profiles.personal_information AS "Информация о пользоватиле",
+ profiles.main_foto_id AS "Фотография пользователя",
+ profiles.created_at AS "Дата создания профиля"
+ 	FROM profiles
+ 		JOIN users
+		ON profiles.id_user = users.id;
+
+-- Третий запрос, по которуму в 10-ом задании будет проведена оптимизация.
+--Запрос, позволяющий по фамалии узнать, какие легковый автомобили есть у пользователя в гараже: 
+SELECT
+ profiles.id_user,
+ profiles.last_name,
+ profiles.first_name,
+ garage.id_light_vehicles,
+ light_vehicles.car_brand
+  FROM profiles
+  	JOIN garage
+	ON garage.id_user = profiles.id_user
+	JOIN light_vehicles
+	ON garage.id_light_vehicles = light_vehicles.id
+	WHERE last_name = 'Lindsay';
