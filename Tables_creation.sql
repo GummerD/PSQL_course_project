@@ -176,3 +176,33 @@ CREATE TABLE garage(
 	CONSTRAINT video_id_fk FOREIGN KEY (vehicles_video_id) REFERENCES video(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+-- 5. Создать два сложных (многотабличных) запроса с использованием подзапросов.
+
+-- запрос показывающий имя и фамилию пользователя, его транспортное средство и выборку по статусу владения (продано или во владении пользователя):
+SELECT 
+ (SELECT id_user FROM profiles WHERE profiles.id_user = garage.id_user) AS id_user,
+ (SELECT CONCAT(first_name, ' ', last_name) FROM profiles WHERE profiles.id_user = garage.id_user) AS user_name,
+ (SELECT car_brand FROM light_vehicles WHERE light_vehicles.id = garage.id_light_vehicles) AS name_light_vehicles, 
+ (SELECT car_brand FROM freight_vehicles WHERE freight_vehicles.id = garage.id_freight_vehicles) AS name_freight_vehicles, 
+ (SELECT moto_brand FROM motorcycles WHERE motorcycles.id = garage.id_motorcycles) AS name_motorcycles,
+ ownership_status
+  FROM garage  
+   GROUP BY
+    id_user,
+	id_light_vehicles, 
+	id_freight_vehicles, 
+	id_motorcycles,
+	ownership_status
+   ORDER BY ownership_status;
+
+-- запрос показывающий какие транспортные срадства есть у пользователя с фамлией Gordon:
+
+SELECT 
+ id_user,
+ (SELECT car_brand FROM light_vehicles WHERE light_vehicles.id = garage.id_light_vehicles) AS name_light_vehicles, 
+ (SELECT car_brand FROM freight_vehicles WHERE freight_vehicles.id = garage.id_freight_vehicles) AS name_freight_vehicles, 
+ (SELECT moto_brand FROM motorcycles WHERE motorcycles.id = garage.id_motorcycles) AS name_motorcycles,
+ ownership_status
+  FROM garage
+  	WHERE id_user = (SELECT id_user FROM profiles WHERE last_name = 'Gordon');
+
